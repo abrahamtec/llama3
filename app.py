@@ -19,7 +19,7 @@ df = pd.read_csv('test_question.csv')  # Asegúrate de tener columnas: 'Question
 
 # Inicializar el modelo Llama 3.2 y el modelo Word2Vec
 llm_llama = OllamaLLM(model="llama3.2")
-data_sentences = df[['Question', 'Tema', 'Subtema']].dropna().values.tolist()
+data_sentences = df[['Question', 'Tema', 'Answers']].dropna().values.tolist()
 word2vec_model = Word2Vec(sentences=[[word.lower() for word in q.split()] for q, _, _ in data_sentences], vector_size=100, window=5, min_count=1, workers=4)
 
 # Inicializar el estado de la sesión para acumular similitudes
@@ -32,7 +32,7 @@ def generar_prompt_rag(pregunta, df):
     mejor_coincidencia = process.extractOne(pregunta, preguntas_df)
     if mejor_coincidencia[1] >= 70:
         index = preguntas_df.index(mejor_coincidencia[0])
-        tema, subtema = df.iloc[index][['Tema', 'Subtema']]
+        tema, subtema = df.iloc[index][['Tema', 'Answers']]
         contexto = f"Temas disponibles: Tema: {tema}, Subtema: {subtema}"
     else:
         contexto = "\n".join([f"Tema: {row['Tema']}, Subtema: {row['Subtema']}" for _, row in df.iterrows()])
@@ -57,7 +57,7 @@ def obtener_respuesta_llama(pregunta):
 # Función para procesar respuesta GPT-4
 def obtener_respuesta_openai(pregunta):
     temas_y_subtemas = "\n".join(
-        [f"Tema: {row['Tema']}, Subtema: {row['Subtema']}" for _, row in df.iterrows()]
+        [f"Tema: {row['Tema']}, Subtema: {row['Answers']}" for _, row in df.iterrows()]
     )
     
     prompt_openai = (
