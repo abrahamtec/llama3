@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-#from langchain_ollama import OllamaLLM
+from langchain_ollama import OllamaLLM
 import openai
 from fuzzywuzzy import process
 from gensim.models import Word2Vec
@@ -15,11 +15,11 @@ openai.api_base = "https://demo-master-ia.openai.azure.com/"  # Reemplaza con el
 openai.api_version = "2023-05-15"  # Asegúrate de que esta sea la versión correcta para tu recurso
 
 # Cargar datos desde el archivo CSV
-df = pd.read_csv('test_question.csv')  # Asegúrate de tener columnas: 'Question', 'Tema', 'Subtema'
+df = pd.read_csv('test_question.csv')  # Asegúrate de tener columnas: 'Question', 'Tema', 'Respuesta'
 
 # Inicializar el modelo Llama 3.2 y el modelo Word2Vec
 llm_llama = OllamaLLM(model="llama3.2")
-data_sentences = df[['Question', 'Tema', 'Answers']].dropna().values.tolist()
+data_sentences = df[['Question', 'Tema', 'Answer']].dropna().values.tolist()
 word2vec_model = Word2Vec(sentences=[[word.lower() for word in q.split()] for q, _, _ in data_sentences], vector_size=100, window=5, min_count=1, workers=4)
 
 # Inicializar el estado de la sesión para acumular similitudes
@@ -32,7 +32,7 @@ def generar_prompt_rag(pregunta, df):
     mejor_coincidencia = process.extractOne(pregunta, preguntas_df)
     if mejor_coincidencia[1] >= 70:
         index = preguntas_df.index(mejor_coincidencia[0])
-        tema, subtema = df.iloc[index][['Tema', 'Answers']]
+        tema, subtema = df.iloc[index][['Tema', 'Answer']]
         contexto = f"Temas disponibles: Tema: {tema}, Subtema: {subtema}"
     else:
         contexto = "\n".join([f"Tema: {row['Tema']}, Subtema: {row['Subtema']}" for _, row in df.iterrows()])
@@ -48,16 +48,20 @@ def generar_prompt_rag(pregunta, df):
     """
     return prompt
 
+
+
 # Función para procesar respuesta Llama 3.2
 def obtener_respuesta_llama(pregunta):
     prompt = generar_prompt_rag(pregunta, df)
     respuesta = llm_llama.generate(prompts=[prompt])
     return respuesta.generations[0][0].text.strip()
 
+
+# Función para procesar respuesta GPT-4
 # Función para procesar respuesta GPT-4
 def obtener_respuesta_openai(pregunta):
     temas_y_subtemas = "\n".join(
-        [f"Tema: {row['Tema']}, Subtema: {row['Answers']}" for _, row in df.iterrows()]
+        [f"Tema: {row['Tema']}, Subtema: {row['Answer']}" for _, row in df.iterrows()]
     )
     
     prompt_openai = (
@@ -74,6 +78,7 @@ def obtener_respuesta_openai(pregunta):
         ]
     )
     return response['choices'][0]['message']['content'].strip()
+    
 
 # Función para calcular la similitud coseno
 def calcular_similitud(pregunta, modelo, data_sentences):
