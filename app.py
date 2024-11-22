@@ -1,8 +1,7 @@
-langchain-ollama==0.2.0
 import streamlit as st
 import pandas as pd
 import numpy as np
-from langchain_ollama import OllamaLLM
+#from langchain_ollama import OllamaLLM
 import openai
 from fuzzywuzzy import process
 from gensim.models import Word2Vec
