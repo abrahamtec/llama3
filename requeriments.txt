@@ -1,2 +1,4 @@
 streamlit
-replicate
+langchain_ollama
+fuzzywuzzy
+streamlit
