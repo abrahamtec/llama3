@@ -11,5 +11,5 @@ einops
 onnx>=1.15.0
 onnxruntime>=1.18.0
 onnxscript>=0.1.0.dev20240126
-git+https:https://github.com/abrahamtec/llama3/edit/main
+git+https://github.com/abrahamtec/llama3/edit/main
 peft==0.13.2
